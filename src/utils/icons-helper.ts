@@ -1,7 +1,7 @@
 import { addIcon } from "obsidian"
 
 const CUSTOM_ICONS = {
-
+  
 } as { [id: string]: string }
 
 export default class IconsHelper {

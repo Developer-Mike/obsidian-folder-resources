@@ -1,6 +1,6 @@
 {
-	"id": "example-plugin",
-	"name": "Example Plugin",
+	"id": "sharepoint-integration",
+	"name": "Sharepoint Integration",
 	"version": "0.0.1",
 	"minAppVersion": "1.1.0",
 	"description": "Example Description",

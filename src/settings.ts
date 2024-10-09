@@ -1,22 +1,22 @@
 import { Notice, PluginSettingTab, Setting } from "obsidian"
-import ExamplePlugin from "./main"
+import SharepointPlugin from "./main"
 
-export interface ExamplePluginSettings {
-
+export interface SharepointPluginSettings {
+  sharepointUrl: string
 }
 
-export const DEFAULT_SETTINGS: Partial<ExamplePluginSettings> = {
-  
+export const DEFAULT_SETTINGS: Partial<SharepointPluginSettings> = {
+  sharepointUrl: 'https://SUBDOMAIN.sharepoint.com/'
 }
 
 export default class SettingsManager {
-  static SETTINGS_CHANGED_EVENT = 'example-plugin:settings-changed'
+  static SETTINGS_CHANGED_EVENT = 'sharepoint-integration:settings-changed'
 
-  private plugin: ExamplePlugin
-  private settings: ExamplePluginSettings
-  private settingsTab: ExamplePluginSettingTab
+  private plugin: SharepointPlugin
+  private settings: SharepointPluginSettings
+  private settingsTab: SharepointPluginSettingTab
 
-  constructor(plugin: ExamplePlugin) {
+  constructor(plugin: SharepointPlugin) {
     this.plugin = plugin
   }
 
@@ -29,26 +29,26 @@ export default class SettingsManager {
     await this.plugin.saveData(this.settings)
   }
 
-  getSetting<T extends keyof ExamplePluginSettings>(key: T): ExamplePluginSettings[T] {
+  getSetting<T extends keyof SharepointPluginSettings>(key: T): SharepointPluginSettings[T] {
     return this.settings[key]
   }
 
-  async setSetting(data: Partial<ExamplePluginSettings>) {
+  async setSetting(data: Partial<SharepointPluginSettings>) {
     this.settings = Object.assign(this.settings, data)
     await this.saveSettings()
     this.plugin.app.workspace.trigger(SettingsManager.SETTINGS_CHANGED_EVENT)
   }
 
   addSettingsTab() {
-    this.settingsTab = new ExamplePluginSettingTab(this.plugin, this)
+    this.settingsTab = new SharepointPluginSettingTab(this.plugin, this)
     this.plugin.addSettingTab(this.settingsTab)
   }
 }
 
-export class ExamplePluginSettingTab extends PluginSettingTab {
+export class SharepointPluginSettingTab extends PluginSettingTab {
   settingsManager: SettingsManager
 
-  constructor(plugin: ExamplePlugin, settingsManager: SettingsManager) {
+  constructor(plugin: SharepointPlugin, settingsManager: SettingsManager) {
     super(plugin.app, plugin)
     this.settingsManager = settingsManager
   }
@@ -57,15 +57,24 @@ export class ExamplePluginSettingTab extends PluginSettingTab {
     let { containerEl } = this
     containerEl.empty()
 
-    // Add settings here
+    new Setting(containerEl)
+      .setName('Sharepoint URL')
+      .setDesc('The URL of your Sharepoint site.')
+      .addText(text => text
+        .setPlaceholder('https://SUBDOMAIN.sharepoint.com/')
+        .setValue(this.settingsManager.getSetting('sharepointUrl'))
+        .onChange(async (value) => {
+          await this.settingsManager.setSetting({ sharepointUrl: value })
+        })
+      )
 
     this.addKofiButton(containerEl)
   }
 
-  private createFeatureHeading(containerEl: HTMLElement, label: string, description: string, settingsKey: keyof ExamplePluginSettings): Setting {
+  /*private createFeatureHeading(containerEl: HTMLElement, label: string, description: string, settingsKey: keyof SharepointPluginSettings): Setting {
     return new Setting(containerEl)
       .setHeading()
-      .setClass('example-plugin-settings-heading')
+      .setClass('sharepoint-integration-settings-heading')
       .setName(label)
       .setDesc(description)
       .addToggle((toggle) =>
@@ -77,7 +86,7 @@ export class ExamplePluginSettingTab extends PluginSettingTab {
             new Notice("Reload obsidian to apply the changes.")
           })
       )
-  }
+  }*/
 
   private addKofiButton(containerEl: HTMLElement) {
     const kofiButton = document.createElement('a')

@@ -2,11 +2,13 @@ import { Notice, PluginSettingTab, Setting } from "obsidian"
 import SharepointPlugin from "./main"
 
 export interface SharepointPluginSettings {
-  sharepointUrl: string
+  defaultSharepointUrl: string
+  specificSharepointUrls: { [regex: string]: string }
 }
 
 export const DEFAULT_SETTINGS: Partial<SharepointPluginSettings> = {
-  sharepointUrl: 'https://SUBDOMAIN.sharepoint.com/'
+  defaultSharepointUrl: 'https://SUBDOMAIN.sharepoint.com/_layouts/15/sharepoint.aspx?v=following',
+  specificSharepointUrls: {}
 }
 
 export default class SettingsManager {
@@ -58,13 +60,25 @@ export class SharepointPluginSettingTab extends PluginSettingTab {
     containerEl.empty()
 
     new Setting(containerEl)
-      .setName('Sharepoint URL')
-      .setDesc('The URL of your Sharepoint site.')
+      .setName('Default Sharepoint URL')
+      .setDesc('The URL of your default Sharepoint site.')
       .addText(text => text
         .setPlaceholder('https://SUBDOMAIN.sharepoint.com/')
-        .setValue(this.settingsManager.getSetting('sharepointUrl'))
+        .setValue(this.settingsManager.getSetting('defaultSharepointUrl'))
         .onChange(async (value) => {
-          await this.settingsManager.setSetting({ sharepointUrl: value })
+          await this.settingsManager.setSetting({ defaultSharepointUrl: value })
+        })
+      )
+
+    new Setting(containerEl)
+      .setName('Specific Sharepoint URLs')
+      .setDesc('Add URLs for specific files or folders.')
+      .addTextArea(text => text
+        .setPlaceholder('"^folder1/.*": "https://SUBDOMAIN.sharepoint.com/folder1",\n"^folder2/.*": "https://SUBDOMAIN.sharepoint.com/folder2"')
+        .setValue(JSON.stringify(this.settingsManager.getSetting('specificSharepointUrls'), null, 2))
+        .onChange(async (value) => {
+          try { await this.settingsManager.setSetting({ specificSharepointUrls: JSON.parse(value) }) } 
+          catch (e) { new Notice('Invalid JSON') }
         })
       )
 

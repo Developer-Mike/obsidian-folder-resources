@@ -35,7 +35,14 @@ export default class SharepointView extends View {
     // @ts-ignore
     const webview = this.containerEl.createEl("webview") as any
     webview.id = "sharepointFrame"
-    webview.src = this.plugin.settings.getSetting('sharepointUrl')
+
+    const activeFilePath = this.plugin.app.workspace.getActiveFile()?.path
+    if (activeFilePath) {
+      webview.src = Object.entries(this.plugin.settings.getSetting('specificSharepointUrls')).find(([regex, _url]) => 
+        new RegExp(regex).test(activeFilePath)
+      )?.[1]
+    }
+    if (!webview.src) webview.src = this.plugin.settings.getSetting('defaultSharepointUrl')
 
     this.createToolbar(webview)
     this.containerEl.appendChild(webview)

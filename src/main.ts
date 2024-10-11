@@ -1,9 +1,9 @@
 import SettingsManager from "./settings"
-import SharepointView from "./sharepoint-view"
+import FolderResourcesView from "./folder-resources-view"
 import IconsHelper from "./utils/icons-helper"
 import { Plugin } from "obsidian"
 
-export default class SharepointPlugin extends Plugin {
+export default class FolderResourcesPlugin extends Plugin {
   settings: SettingsManager
   
 	async onload() {
@@ -13,18 +13,18 @@ export default class SharepointPlugin extends Plugin {
     await this.settings.loadSettings()
     this.settings.addSettingsTab()
 
-    this.registerView(SharepointView.VIEW_TYPE, (leaf) => new SharepointView(this, leaf))
+    this.registerView(FolderResourcesView.VIEW_TYPE, (leaf) => new FolderResourcesView(this, leaf))
 
     this.addCommand({
-      id: 'open-sharepoint',
-      name: 'Open Sharepoint',
-      callback: () => SharepointView.openInNewTab(this)
+      id: 'open-resources',
+      name: 'Open Folder Resources',
+      callback: () => FolderResourcesView.openInNewTab(this)
     })
 
     this.addRibbonIcon(
       'folder-symlink', 
-      'Open Sharepoint', 
-      () => SharepointView.openInNewTab(this)
+      'Open Folder Resources', 
+      () => FolderResourcesView.openInNewTab(this)
     )
 	}
 

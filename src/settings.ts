@@ -1,24 +1,24 @@
 import { Notice, PluginSettingTab, Setting } from "obsidian"
-import SharepointPlugin from "./main"
+import FolderResourcesPlugin from "./main"
 
-export interface SharepointPluginSettings {
-  defaultSharepointUrl: string
-  specificSharepointUrls: { [regex: string]: string }
+export interface FolderResourcesPluginSettings {
+  defaultResourceUrl: string
+  specificResourceUrls: { [folder: string]: string }
 }
 
-export const DEFAULT_SETTINGS: Partial<SharepointPluginSettings> = {
-  defaultSharepointUrl: 'https://SUBDOMAIN.sharepoint.com/_layouts/15/sharepoint.aspx?v=following',
-  specificSharepointUrls: {}
+export const DEFAULT_SETTINGS: Partial<FolderResourcesPluginSettings> = {
+  defaultResourceUrl: 'https://SUBDOMAIN.resources.com/_layouts/15/resources.aspx?v=following',
+  specificResourceUrls: {}
 }
 
 export default class SettingsManager {
-  static SETTINGS_CHANGED_EVENT = 'sharepoint-integration:settings-changed'
+  static SETTINGS_CHANGED_EVENT = 'folder-resources:settings-changed'
 
-  private plugin: SharepointPlugin
-  private settings: SharepointPluginSettings
-  private settingsTab: SharepointPluginSettingTab
+  private plugin: FolderResourcesPlugin
+  private settings: FolderResourcesPluginSettings
+  private settingsTab: FolderResourcesPluginSettingTab
 
-  constructor(plugin: SharepointPlugin) {
+  constructor(plugin: FolderResourcesPlugin) {
     this.plugin = plugin
   }
 
@@ -31,26 +31,26 @@ export default class SettingsManager {
     await this.plugin.saveData(this.settings)
   }
 
-  getSetting<T extends keyof SharepointPluginSettings>(key: T): SharepointPluginSettings[T] {
+  getSetting<T extends keyof FolderResourcesPluginSettings>(key: T): FolderResourcesPluginSettings[T] {
     return this.settings[key]
   }
 
-  async setSetting(data: Partial<SharepointPluginSettings>) {
+  async setSetting(data: Partial<FolderResourcesPluginSettings>) {
     this.settings = Object.assign(this.settings, data)
     await this.saveSettings()
     this.plugin.app.workspace.trigger(SettingsManager.SETTINGS_CHANGED_EVENT)
   }
 
   addSettingsTab() {
-    this.settingsTab = new SharepointPluginSettingTab(this.plugin, this)
+    this.settingsTab = new FolderResourcesPluginSettingTab(this.plugin, this)
     this.plugin.addSettingTab(this.settingsTab)
   }
 }
 
-export class SharepointPluginSettingTab extends PluginSettingTab {
+export class FolderResourcesPluginSettingTab extends PluginSettingTab {
   settingsManager: SettingsManager
 
-  constructor(plugin: SharepointPlugin, settingsManager: SettingsManager) {
+  constructor(plugin: FolderResourcesPlugin, settingsManager: SettingsManager) {
     super(plugin.app, plugin)
     this.settingsManager = settingsManager
   }
@@ -60,24 +60,24 @@ export class SharepointPluginSettingTab extends PluginSettingTab {
     containerEl.empty()
 
     new Setting(containerEl)
-      .setName('Default Sharepoint URL')
-      .setDesc('The URL of your default Sharepoint site.')
+      .setName('Default Resources URL')
+      .setDesc('The URL of your default resources site.')
       .addText(text => text
-        .setPlaceholder('https://SUBDOMAIN.sharepoint.com/')
-        .setValue(this.settingsManager.getSetting('defaultSharepointUrl'))
+        .setPlaceholder('https://SUBDOMAIN.resources.com/')
+        .setValue(this.settingsManager.getSetting('defaultResourceUrl'))
         .onChange(async (value) => {
-          await this.settingsManager.setSetting({ defaultSharepointUrl: value })
+          await this.settingsManager.setSetting({ defaultResourceUrl: value })
         })
       )
 
     new Setting(containerEl)
-      .setName('Specific Sharepoint URLs')
-      .setDesc('Add URLs for specific files or folders.')
+      .setName('Specific Resources URLs')
+      .setDesc('Add resource URLs for specific files or folders.')
       .addTextArea(text => text
-        .setPlaceholder('"^folder1/.*": "https://SUBDOMAIN.sharepoint.com/folder1",\n"^folder2/.*": "https://SUBDOMAIN.sharepoint.com/folder2"')
-        .setValue(JSON.stringify(this.settingsManager.getSetting('specificSharepointUrls'), null, 2))
+        .setPlaceholder('"folder1": "https://SUBDOMAIN.resources.com/folder1",\n"folder2": "https://SUBDOMAIN.resources.com/folder2"')
+        .setValue(JSON.stringify(this.settingsManager.getSetting('specificResourceUrls'), null, 2))
         .onChange(async (value) => {
-          try { await this.settingsManager.setSetting({ specificSharepointUrls: JSON.parse(value) }) } 
+          try { await this.settingsManager.setSetting({ specificResourceUrls: JSON.parse(value) }) } 
           catch (e) { new Notice('Invalid JSON') }
         })
       )
@@ -85,10 +85,10 @@ export class SharepointPluginSettingTab extends PluginSettingTab {
     this.addKofiButton(containerEl)
   }
 
-  /*private createFeatureHeading(containerEl: HTMLElement, label: string, description: string, settingsKey: keyof SharepointPluginSettings): Setting {
+  /*private createFeatureHeading(containerEl: HTMLElement, label: string, description: string, settingsKey: keyof ResourcesPluginSettings): Setting {
     return new Setting(containerEl)
       .setHeading()
-      .setClass('sharepoint-integration-settings-heading')
+      .setClass('resources-integration-settings-heading')
       .setName(label)
       .setDesc(description)
       .addToggle((toggle) =>

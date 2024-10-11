@@ -4,11 +4,15 @@ import FolderResourcesPlugin from "./main"
 export interface FolderResourcesPluginSettings {
   defaultResourceUrl: string
   specificResourceUrls: { [folder: string]: string }
+  putDownloadsInNestedAttachmentsFolder: boolean
+  attachmentsFolderName: string
 }
 
 export const DEFAULT_SETTINGS: Partial<FolderResourcesPluginSettings> = {
-  defaultResourceUrl: 'https://SUBDOMAIN.resources.com/_layouts/15/resources.aspx?v=following',
-  specificResourceUrls: {}
+  defaultResourceUrl: 'https://www.google.com/',
+  specificResourceUrls: {},
+  putDownloadsInNestedAttachmentsFolder: true,
+  attachmentsFolderName: 'Attachments'
 }
 
 export default class SettingsManager {
@@ -63,7 +67,7 @@ export class FolderResourcesPluginSettingTab extends PluginSettingTab {
       .setName('Default Resources URL')
       .setDesc('The URL of your default resources site.')
       .addText(text => text
-        .setPlaceholder('https://SUBDOMAIN.resources.com/')
+        .setPlaceholder('https://SUBDOMAIN.resources.com/_layouts/15/resources.aspx?v=following')
         .setValue(this.settingsManager.getSetting('defaultResourceUrl'))
         .onChange(async (value) => {
           await this.settingsManager.setSetting({ defaultResourceUrl: value })
@@ -79,6 +83,27 @@ export class FolderResourcesPluginSettingTab extends PluginSettingTab {
         .onChange(async (value) => {
           try { await this.settingsManager.setSetting({ specificResourceUrls: JSON.parse(value) }) } 
           catch (e) { new Notice('Invalid JSON') }
+        })
+      )
+
+    new Setting(containerEl)
+      .setName('Put Downloads in Nested Attachments Folder')
+      .setDesc('If enabled, downloads will be put in a folder named "Attachments" inside the current folder.')
+      .addToggle(toggle => toggle
+        .setValue(this.settingsManager.getSetting('putDownloadsInNestedAttachmentsFolder'))
+        .onChange(async (value) => {
+          await this.settingsManager.setSetting({ putDownloadsInNestedAttachmentsFolder: value })
+        })
+      )
+
+    new Setting(containerEl)
+      .setName('Attachments Folder Name')
+      .setDesc('The name of the folder where downloads will be put.')
+      .addText(text => text
+        .setPlaceholder('Attachments')
+        .setValue(this.settingsManager.getSetting('attachmentsFolderName'))
+        .onChange(async (value) => {
+          await this.settingsManager.setSetting({ attachmentsFolderName: value })
         })
       )
 

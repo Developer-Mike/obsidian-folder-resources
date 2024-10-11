@@ -1,6 +1,7 @@
-import { setIcon, View, WorkspaceLeaf } from "obsidian"
+import { IconName, setIcon, TFolder, View, WorkspaceLeaf } from "obsidian"
 import FolderResourcesPlugin from "./main"
 const { remote } = require('electron')
+import { promises as fs } from 'fs'
 
 export default class FolderResourcesView extends View {
   static readonly VIEW_TYPE = "folder-resources-view"
@@ -25,6 +26,7 @@ export default class FolderResourcesView extends View {
 
   getViewType(): string { return FolderResourcesView.VIEW_TYPE }
   getDisplayText(): string { return this.folder ? `Resources (${this.folder})` : "Resources" }
+  getIcon(): IconName { return "folder-symlink" }
 
   onload(): void {
     // @ts-ignore
@@ -32,11 +34,11 @@ export default class FolderResourcesView extends View {
     webview.id = "folderResourcesFrame"
 
     // Add download listener
-    remote.session.defaultSession.on('will-download', this.onDownload)
+    remote.session.defaultSession.on('will-download', this.onDownload.bind(this))
 
-    this.path = this.plugin.app.workspace.getActiveFile()?.path ?? null
+    this.path = this.plugin.app.workspace.getActiveFile()?.path?.split("/")?.slice(0, -1)?.join("/") ?? null
     if (this.path) {
-      const folders = this.path.split("/").slice(0, -1)
+      const folders = this.path.split("/")
       webview.src = Object.entries(this.plugin.settings.getSetting('specificResourceUrls')).find(([folder, _url]) => {
         if (folders.includes(folder)) {
           this.folder = folder
@@ -51,8 +53,7 @@ export default class FolderResourcesView extends View {
   }
 
   onunload(): void {
-    const webview = this.containerEl.querySelector("webview") as any
-    webview.remove()
+    remote.session.defaultSession.off('will-download', this.onDownload.bind(this))
   }
 
   private createToolbar(webview: any) {
@@ -71,7 +72,29 @@ export default class FolderResourcesView extends View {
     toolbar.appendChild(forward)
   }
 
-  private onDownload(event: any, item: any, webContents: any) {
-    console.log("will-download", item.getURL())
+  private async onDownload(_event: any, item: any, _webContents: any) {
+    // Check if active leaf is the current view
+    if (this.plugin.app.workspace.getActiveViewOfType(FolderResourcesView) !== this) return
+
+    if (!this.plugin.settings.getSetting('putDownloadsInNestedAttachmentsFolder')) return
+
+    let targetRelativeFolder = this.plugin.settings.getSetting('attachmentsFolderName')
+    if (this.path) targetRelativeFolder = `${this.path}/${targetRelativeFolder}`
+
+    item.on('done', async (_event: any, _state: any) => {
+      const filename = item.savePath.replaceAll("\\", "/").split("/").pop()
+      // @ts-ignore
+      const targetPath = `${this.plugin.app.vault.adapter.basePath.replaceAll("\\", "/")}/${targetRelativeFolder}/${filename}`
+
+      // Create the folder if it doesn't exist
+      const folder = this.plugin.app.vault.getAbstractFileByPath(targetRelativeFolder)
+      if (!(folder instanceof TFolder)) await this.plugin.app.vault.createFolder(targetRelativeFolder)
+
+      // Move the file to the attachments folder
+      fs.rename(item.savePath, targetPath).then(() => {
+        // Update file explorer
+        this.plugin.app.metadataCache.trigger(`${targetRelativeFolder}/${filename}`)
+      })
+    })
   }
 }

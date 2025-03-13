@@ -1,11 +1,11 @@
 {
 	"id": "folder-resources",
 	"name": "Folder Resources",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"minAppVersion": "1.1.0",
 	"description": "Accelerate your workflow by accessing your resource websites (like SharePoint or OneNote) without leaving the app.",
 	"author": "Developer-Mike",
 	"authorUrl": "https://github.com/Developer-Mike",
-    "fundingUrl": "https://ko-fi.com/X8X27IA08",
+  "fundingUrl": "https://ko-fi.com/X8X27IA08",
 	"isDesktopOnly": true
 }

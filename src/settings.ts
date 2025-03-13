@@ -4,14 +4,16 @@ import FolderResourcesPlugin from "./main"
 export interface FolderResourcesPluginSettings {
   defaultResourceUrl: string
   specificResourceUrls: { [folder: string]: string }
-  putDownloadsInNestedAttachmentsFolder: boolean
+  putDownloadInLocalFolder: boolean
+  useNestedAttachmentsFolder: boolean
   attachmentsFolderName: string
 }
 
 export const DEFAULT_SETTINGS: Partial<FolderResourcesPluginSettings> = {
   defaultResourceUrl: 'https://www.google.com/',
   specificResourceUrls: {},
-  putDownloadsInNestedAttachmentsFolder: true,
+  putDownloadInLocalFolder: true,
+  useNestedAttachmentsFolder: false,
   attachmentsFolderName: 'Attachments'
 }
 
@@ -87,12 +89,22 @@ export class FolderResourcesPluginSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName('Put Downloads in Nested Attachments Folder')
+      .setName('Put Downloads in Local Folder')
+      .setDesc('If enabled, downloads will be put in the local directory.')
+      .addToggle(toggle => toggle
+        .setValue(this.settingsManager.getSetting('putDownloadInLocalFolder'))
+        .onChange(async (value) => {
+          await this.settingsManager.setSetting({ putDownloadInLocalFolder: value })
+        })
+      )
+      
+    new Setting(containerEl)
+      .setName('Use Nested Attachments Folder')
       .setDesc('If enabled, downloads will be put in a folder named "Attachments" inside the current folder.')
       .addToggle(toggle => toggle
-        .setValue(this.settingsManager.getSetting('putDownloadsInNestedAttachmentsFolder'))
+        .setValue(this.settingsManager.getSetting('useNestedAttachmentsFolder'))
         .onChange(async (value) => {
-          await this.settingsManager.setSetting({ putDownloadsInNestedAttachmentsFolder: value })
+          await this.settingsManager.setSetting({ useNestedAttachmentsFolder: value })
         })
       )
 

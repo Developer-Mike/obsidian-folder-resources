@@ -2,6 +2,7 @@ import { IconName, setIcon, TFolder, View, WorkspaceLeaf } from "obsidian"
 import FolderResourcesPlugin from "./main"
 const { remote } = require('electron')
 import { promises as fs } from 'fs'
+import * as path from "path"
 
 export default class FolderResourcesView extends View {
   static readonly VIEW_TYPE = "folder-resources-view"
@@ -76,10 +77,11 @@ export default class FolderResourcesView extends View {
     // Check if active leaf is the current view
     if (this.plugin.app.workspace.getActiveViewOfType(FolderResourcesView) !== this) return
 
-    if (!this.plugin.settings.getSetting('putDownloadsInNestedAttachmentsFolder')) return
+    if (!this.plugin.settings.getSetting('putDownloadInLocalFolder')) return
 
-    let targetRelativeFolder = this.plugin.settings.getSetting('attachmentsFolderName')
-    if (this.path) targetRelativeFolder = `${this.path}/${targetRelativeFolder}`
+    const targetRelativeFolder = this.plugin.settings.getSetting('useNestedAttachmentsFolder') ?
+      path.join(this.path ?? "", this.plugin.settings.getSetting('attachmentsFolderName')) :
+      this.path ?? ""
 
     item.on('done', async (_event: any, _state: any) => {
       const filename = item.savePath.replaceAll("\\", "/").split("/").pop()
